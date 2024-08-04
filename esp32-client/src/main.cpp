@@ -1,18 +1,37 @@
 #include <Arduino.h>
-#include <FirebaseClient.h>
+#include <FirebaseESP32.h>
+#include <WiFi.h>
 
-// put function declarations here:
-int myFunction(int, int);
+#include "addons/RTDBHelper.h"
+#include "addons/TokenHelper.h"
+#include "credentials.h"
+
+FirebaseData firebaseData;
+FirebaseAuth auth;
+FirebaseConfig config;
 
 void setup() {
-  Serial.begin(9600);
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(115200);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.printf(".");
+    delay(300);
+  }
+
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_KEY;
+
+  if (Firebase.signUp(&config, &auth, "", "")) {
+    Serial.println("Firebase is connected");
+  } else {
+    Serial.printf("Firebase failed to connect.");
+  }
+
+  config.token_status_callback = tokenStatusCallback;
+
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) { return x + y; }
+void loop() {}
