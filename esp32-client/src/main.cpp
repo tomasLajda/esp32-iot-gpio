@@ -7,9 +7,9 @@
 #include "credentials.h"
 
 struct Pin {
-  int id;
+  byte id;
   String type;
-  byte value;
+  int value;
 };
 
 FirebaseData firebaseData;
@@ -24,16 +24,28 @@ Pin pins[] = {{16, "input", LOW},
 
 void initializePinData();
 
-void setPin(Pin &newPin) {
-  for (auto &pin : pins) {
-    if (pin.id == newPin.id) {
-      pin = newPin;
-    }
+void setPin(Pin &oldPin, Pin &currentPin) {
+  if (currentPin.type == "output") {
+    pinMode(currentPin.id, OUTPUT);
+    digitalWrite(currentPin.id, currentPin.value);
   }
+
+  if (currentPin.type == "input" || currentPin.type == "analog") {
+    pinMode(oldPin.id, INPUT);
+  }
+
+  oldPin = currentPin;
+}
+
+void updatePinDb(const Pin &pin) {
+  String path = String("/pins/" + String(pin.id));
+
+  Firebase.setString(firebaseData, String(path + "/type"), pin.type);
+  Firebase.setInt(firebaseData, String(path + "/value"), pin.value);
 }
 
 void readPin(Pin &pin) {
-  if (pin.type == "output") {
+  if (pin.type == "input") {
     int value = digitalRead(pin.id);
 
     if (value != pin.value) {
@@ -51,13 +63,6 @@ void readPin(Pin &pin) {
   }
 }
 
-void updatePinDb(const Pin &pin) {
-  String path = String("/pins/" + String(pin.id));
-
-  Firebase.setString(firebaseData, String(path + "/type"), pin.type);
-  Firebase.setInt(firebaseData, String(path + "/value"), pin.value);
-}
-
 void parsePin(const String &key, FirebaseJson &json) {
   FirebaseJsonData jsonData;
   json.get(jsonData, key);
@@ -68,6 +73,18 @@ void parsePin(const String &key, FirebaseJson &json) {
 
     json.get(jsonData, String(key + "/value"));
     int value = jsonData.intValue;
+
+    byte id = (byte)key.toInt();
+    if (id != 0 || key == "0") {
+      Pin pin = {id, type, value};
+
+      for (auto &oldPin : pins) {
+        if (oldPin.id == pin.id) {
+          setPin(oldPin, pin);
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -124,7 +141,16 @@ void setup() {
   Firebase.setStreamCallback(firebaseData, streamCallback, streamTimeoutCallback);
 }
 
-void loop() { delay(3000); }
+void loop() {
+  for (auto &pin : pins) {
+    if (pin.type == "analog" || pin.type == "input") {
+      readPin(pin);
+    }
+
+    Serial.printf("Pin: %d, type: %s, value: %d\n", pin.id, pin.type, pin.value);
+  }
+  delay(1000);
+}
 
 void initializePinData() {
   Serial.println("Initialized data");
