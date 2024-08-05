@@ -11,20 +11,13 @@ struct Pin {
   String type;
   int value;
 
-  bool operator==(const Pin &pin) {
-    if (id == pin.id && type == pin.type && value == pin.value) {
-      return true;
-    }
-    return false;
+  bool operator==(const Pin &pin) const {
+    return id == pin.id && type == pin.type && value == pin.value;
   }
 
-  bool operator!=(const Pin &pin) {
-    if (id == pin.id && type == pin.type && value == pin.value) {
-      return false;
-    }
-    return true;
-  }
+  bool operator!=(const Pin &pin) const { return !(*this == pin); }
 };
+
 FirebaseData firebaseData;
 FirebaseAuth auth;
 FirebaseConfig config;
