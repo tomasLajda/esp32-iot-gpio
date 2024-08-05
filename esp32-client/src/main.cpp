@@ -22,8 +22,6 @@ Pin pins[] = {{16, "input", LOW},
               {19, "output", LOW},
               {32, "analog", LOW}};
 
-void initializePinData();
-
 void setPin(Pin &oldPin, Pin &currentPin) {
   if (currentPin.type == "output") {
     pinMode(currentPin.id, OUTPUT);
@@ -39,13 +37,23 @@ void setPin(Pin &oldPin, Pin &currentPin) {
 }
 
 void updatePinDb(const Pin &pin) {
-  String path = String("/pins/" + String(pin.id));
+  if (Firebase.ready()) {
+    String path = String("/pins/" + String(pin.id));
 
-  if (!Firebase.setInt(firebaseData, String(path + "/value"), pin.value)) {
-    Serial.println("Failed to send value: " + firebaseData.errorReason());
+    if (!Firebase.setInt(firebaseData, String(path + "/value"), pin.value)) {
+      Serial.println("Failed to send value: " + firebaseData.errorReason());
+    }
   }
 
-  delay(200);
+  delay(100);
+}
+
+void initializePinData() {
+  Serial.println("Initialized data");
+
+  for (const auto &pin : pins) {
+    updatePinDb(pin);
+  }
 }
 
 void readPin(Pin &pin) {
@@ -146,22 +154,13 @@ void setup() {
 }
 
 void loop() {
-  if (Firebase.ready()) {
-    for (auto &pin : pins) {
-      if (pin.type == "analog" || pin.type == "input") {
-        readPin(pin);
-      }
-
-      Serial.printf("Pin: %d, type: %s, value: %d\n", pin.id, pin.type, pin.value);
+  for (auto &pin : pins) {
+    if (pin.type == "analog" || pin.type == "input") {
+      readPin(pin);
     }
+
+    Serial.printf("Pin: %d, type: %s, value: %d\n", pin.id, pin.type, pin.value);
   }
+
   delay(1000);
-}
-
-void initializePinData() {
-  Serial.println("Initialized data");
-
-  for (const auto &pin : pins) {
-    // updatePinDb(pin);
-  }
 }
