@@ -6,37 +6,30 @@
 #include "addons/TokenHelper.h"
 #include "credentials.h"
 
+struct Pin {
+  const int id;
+  String type;
+  int value;
+};
+
 FirebaseData firebaseData;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-const int inputPins[] = {16, 17};
-const int outputPins[] = {18, 19};
-const int analogToDigital = 32;
+Pin pins[] = {{16, "input", LOW},
+              {17, "input", LOW},
+              {18, "output", LOW},
+              {19, "output", LOW},
+              {32, "analog", LOW}};
 
 void initializePinData();
 
-void setPin(const int &pin, const String &type, const int &value) {
-  String path = String("/pins/" + String(pin));
+void setPinDb(const Pin &pin) {
+  String path = String("/pins/" + String(pin.id));
 
-  Firebase.setString(firebaseData, String(path + "/type"), type);
-  Firebase.setInt(firebaseData, String(path + "/value"), value);
+  Firebase.setString(firebaseData, String(path + "/type"), pin.type);
+  Firebase.setInt(firebaseData, String(path + "/value"), pin.value);
 }
-
-// void setPin(int pin, String type, int value) {
-//   if (type == "input") {
-//     pinMode(pin, INPUT);
-//   }
-
-//   if (type == "output") {
-//     pinMode(pin, OUTPUT);
-//   }
-
-//   if (type == "analog") {
-//     analogRead(pin);
-//     firebaseData.set
-//   }
-// }
 
 void parsePin(const String &key, FirebaseJson &json) {
   FirebaseJsonData jsonData;
@@ -109,13 +102,7 @@ void loop() { delay(3000); }
 void initializePinData() {
   Serial.println("Initialized data");
 
-  for (const int &pin : inputPins) {
-    setPin(pin, "input", LOW);
+  for (const auto &pin : pins) {
+    setPinDb(pin);
   }
-
-  for (const int &pin : outputPins) {
-    setPin(pin, "output", LOW);
-  }
-
-  setPin(analogToDigital, "analog", LOW);
 }
