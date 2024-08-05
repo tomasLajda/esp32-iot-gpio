@@ -17,19 +17,39 @@ const int digitalToAnalog = 25;
 
 void initializePinData();
 
+void parsePin(const String &key, FirebaseJson &json) {
+  FirebaseJsonData jsonData;
+  json.get(jsonData, key);
+
+  if (jsonData.type == "object") {
+    json.get(jsonData, String(key + "/type"));
+    String type = jsonData.stringValue;
+
+    json.get(jsonData, String(key + "/value"));
+    int value = jsonData.intValue;
+  }
+}
+
 void streamCallback(StreamData data) {
   Serial.println("Stream data received:");
   Serial.println(data.streamPath());
-  Serial.println(data.dataPath());
-  Serial.println(data.dataType());
   Serial.println(data.stringData());
-}
 
-void streamTimeoutCallback(bool timeout) {
-  if (timeout) {
-    Serial.println("Stream timeout, resuming...");
+  if (data.dataTypeEnum() == fb_esp_rtdb_data_type_json) {
+    FirebaseJson &json = data.jsonObject();
+    size_t numElements = json.iteratorBegin();
+    int type;
+    String key, value;
+
+    for (size_t i = 0; i < numElements; i++) {
+      json.iteratorGet(i, type, key, value);
+      parsePin(key, json);
+    }
+    json.iteratorEnd();
   }
 }
+
+void streamTimeoutCallback(bool timeout) {}
 
 void setup() {
   Serial.begin(115200);
@@ -63,13 +83,10 @@ void setup() {
   Firebase.setStreamCallback(firebaseData, streamCallback, streamTimeoutCallback);
 }
 
-void loop() {
-  if (Firebase.ready()) {
-  }
-}
+void loop() { delay(3000); }
 
 void initializePinData() {
-  Serial.println("initialized data");
+  Serial.println("Initialized data");
 
   for (const int &pin : inputPins) {
     String path = String("/pins/" + String(pin));
@@ -80,7 +97,6 @@ void initializePinData() {
 
   for (const int &pin : outputPins) {
     String path = String("/pins/" + String(pin));
-    Serial.println(path);
     Firebase.setString(firebaseData, String(path + "/type"), "input");
 
     Firebase.setInt(firebaseData, String(path + "/value"), LOW);
