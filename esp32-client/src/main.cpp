@@ -28,20 +28,24 @@ void setPin(Pin &oldPin, Pin &currentPin) {
   if (currentPin.type == "output") {
     pinMode(currentPin.id, OUTPUT);
     digitalWrite(currentPin.id, currentPin.value);
+    oldPin.value = currentPin.value;
   }
 
   if (currentPin.type == "input" || currentPin.type == "analog") {
     pinMode(oldPin.id, INPUT);
   }
 
-  oldPin = currentPin;
+  oldPin.type = currentPin.type;
 }
 
 void updatePinDb(const Pin &pin) {
   String path = String("/pins/" + String(pin.id));
 
-  Firebase.setString(firebaseData, String(path + "/type"), pin.type);
-  Firebase.setInt(firebaseData, String(path + "/value"), pin.value);
+  if (!Firebase.setInt(firebaseData, String(path + "/value"), pin.value)) {
+    Serial.println("Failed to send value: " + firebaseData.errorReason());
+  }
+
+  delay(200);
 }
 
 void readPin(Pin &pin) {
@@ -55,7 +59,7 @@ void readPin(Pin &pin) {
   } else if (pin.type == "analog") {
     int value = analogRead(pin.id);
 
-    const int threshold = 10;
+    const int threshold = 50;
     if (abs(value - pin.value) > threshold) {
       pin.value = value;
       updatePinDb(pin);
@@ -142,12 +146,14 @@ void setup() {
 }
 
 void loop() {
-  for (auto &pin : pins) {
-    if (pin.type == "analog" || pin.type == "input") {
-      readPin(pin);
-    }
+  if (Firebase.ready()) {
+    for (auto &pin : pins) {
+      if (pin.type == "analog" || pin.type == "input") {
+        readPin(pin);
+      }
 
-    Serial.printf("Pin: %d, type: %s, value: %d\n", pin.id, pin.type, pin.value);
+      Serial.printf("Pin: %d, type: %s, value: %d\n", pin.id, pin.type, pin.value);
+    }
   }
   delay(1000);
 }
@@ -156,6 +162,6 @@ void initializePinData() {
   Serial.println("Initialized data");
 
   for (const auto &pin : pins) {
-    updatePinDb(pin);
+    // updatePinDb(pin);
   }
 }
