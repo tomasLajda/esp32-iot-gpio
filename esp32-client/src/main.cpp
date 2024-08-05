@@ -13,9 +13,30 @@ FirebaseConfig config;
 const int inputPins[] = {16, 17};
 const int outputPins[] = {18, 19};
 const int analogToDigital = 32;
-const int digitalToAnalog = 25;
 
 void initializePinData();
+
+void setPin(const int &pin, const String &type, const int &value) {
+  String path = String("/pins/" + String(pin));
+
+  Firebase.setString(firebaseData, String(path + "/type"), type);
+  Firebase.setInt(firebaseData, String(path + "/value"), value);
+}
+
+// void setPin(int pin, String type, int value) {
+//   if (type == "input") {
+//     pinMode(pin, INPUT);
+//   }
+
+//   if (type == "output") {
+//     pinMode(pin, OUTPUT);
+//   }
+
+//   if (type == "analog") {
+//     analogRead(pin);
+//     firebaseData.set
+//   }
+// }
 
 void parsePin(const String &key, FirebaseJson &json) {
   FirebaseJsonData jsonData;
@@ -89,23 +110,12 @@ void initializePinData() {
   Serial.println("Initialized data");
 
   for (const int &pin : inputPins) {
-    String path = String("/pins/" + String(pin));
-    Firebase.setString(firebaseData, String(path + "/type").c_str(), "input");
-
-    Firebase.setInt(firebaseData, String(path + "/value"), LOW);
+    setPin(pin, "input", LOW);
   }
 
   for (const int &pin : outputPins) {
-    String path = String("/pins/" + String(pin));
-    Firebase.setString(firebaseData, String(path + "/type"), "input");
-
-    Firebase.setInt(firebaseData, String(path + "/value"), LOW);
+    setPin(pin, "output", LOW);
   }
 
-  // Initialize analog pins
-  Firebase.setString(firebaseData, "/pins/32/type/", "analog");
-  Firebase.setInt(firebaseData, "/pins/32/value/", LOW);
-
-  Firebase.setString(firebaseData, "/pins/25/type/", "digital");
-  Firebase.setInt(firebaseData, "/pins/25/value/", LOW);
+  setPin(analogToDigital, "analog", LOW);
 }
