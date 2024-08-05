@@ -10,8 +10,21 @@ struct Pin {
   byte id;
   String type;
   int value;
-};
 
+  bool operator==(const Pin &pin) {
+    if (id == pin.id && type == pin.type && value == pin.value) {
+      return true;
+    }
+    return false;
+  }
+
+  bool operator!=(const Pin &pin) {
+    if (id == pin.id && type == pin.type && value == pin.value) {
+      return false;
+    }
+    return true;
+  }
+};
 FirebaseData firebaseData;
 FirebaseAuth auth;
 FirebaseConfig config;
@@ -23,17 +36,18 @@ Pin pins[] = {{16, "input", LOW},
               {32, "analog", LOW}};
 
 void setPin(Pin &oldPin, Pin &currentPin) {
+  if (oldPin == currentPin) return;
+
   if (currentPin.type == "output") {
     pinMode(currentPin.id, OUTPUT);
     digitalWrite(currentPin.id, currentPin.value);
-    oldPin.value = currentPin.value;
   }
 
   if (currentPin.type == "input" || currentPin.type == "analog") {
     pinMode(oldPin.id, INPUT);
   }
 
-  oldPin.type = currentPin.type;
+  oldPin = currentPin;
 }
 
 void updatePinDb(const Pin &pin) {
@@ -158,8 +172,6 @@ void loop() {
     if (pin.type == "analog" || pin.type == "input") {
       readPin(pin);
     }
-
-    Serial.printf("Pin: %d, type: %s, value: %d\n", pin.id, pin.type, pin.value);
   }
 
   delay(1000);
