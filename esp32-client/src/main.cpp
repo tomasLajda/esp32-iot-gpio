@@ -7,9 +7,9 @@
 #include "credentials.h"
 
 struct Pin {
-  const int id;
+  int id;
   String type;
-  int value;
+  byte value;
 };
 
 FirebaseData firebaseData;
@@ -24,7 +24,34 @@ Pin pins[] = {{16, "input", LOW},
 
 void initializePinData();
 
-void setPinDb(const Pin &pin) {
+void setPin(Pin &newPin) {
+  for (auto &pin : pins) {
+    if (pin.id == newPin.id) {
+      pin = newPin;
+    }
+  }
+}
+
+void readPin(Pin &pin) {
+  if (pin.type == "output") {
+    int value = digitalRead(pin.id);
+
+    if (value != pin.value) {
+      pin.value = value;
+      updatePinDb(pin);
+    }
+  } else if (pin.type == "analog") {
+    int value = analogRead(pin.id);
+
+    const int threshold = 10;
+    if (abs(value - pin.value) > threshold) {
+      pin.value = value;
+      updatePinDb(pin);
+    }
+  }
+}
+
+void updatePinDb(const Pin &pin) {
   String path = String("/pins/" + String(pin.id));
 
   Firebase.setString(firebaseData, String(path + "/type"), pin.type);
@@ -103,6 +130,6 @@ void initializePinData() {
   Serial.println("Initialized data");
 
   for (const auto &pin : pins) {
-    setPinDb(pin);
+    updatePinDb(pin);
   }
 }
