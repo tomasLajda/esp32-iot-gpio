@@ -73,7 +73,7 @@ void readPin(Pin &pin) {
   } else if (pin.type == "analog") {
     int value = analogRead(pin.id);
 
-    const int threshold = 50;
+    const int threshold = 10;
     if (abs(value - pin.value) > threshold) {
       pin.value = value;
       updatePinDb(pin);
