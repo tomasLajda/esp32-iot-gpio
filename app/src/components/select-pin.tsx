@@ -38,7 +38,7 @@ const SelectPin = ({ pins, type }: SelectPinProps) => {
   };
 
   return (
-    <>
+    <div className='flex justify-between items-center gap-4'>
       <Select
         onValueChange={handleValueChange}
         value={selectedPin?.id.toString()}
@@ -60,13 +60,13 @@ const SelectPin = ({ pins, type }: SelectPinProps) => {
         </SelectContent>
       </Select>
       {type === 'output' ? (
-        <Toggle onClick={changePinValue}>
-          {selectedPin?.value === 0 ? 'off' : 'on'}
+        <Toggle onClick={changePinValue} className='w-10'>
+          {selectedPin?.value === 1 ? 'on' : 'off'}
         </Toggle>
       ) : (
-        <p>{selectedPin?.value}</p>
+        <p className='w-10 text-center'>{selectedPin?.value || 0}</p>
       )}
-    </>
+    </div>
   );
 };
 
