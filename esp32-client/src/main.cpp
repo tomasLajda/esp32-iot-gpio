@@ -33,7 +33,6 @@ void setPin(Pin &oldPin, Pin &currentPin) {
 
   if (currentPin.type == "output") {
     pinMode(currentPin.id, OUTPUT);
-    digitalWrite(currentPin.id, currentPin.value);
   }
 
   if (currentPin.type == "input" || currentPin.type == "analog") {
@@ -164,6 +163,9 @@ void loop() {
   for (auto &pin : pins) {
     if (pin.type == "analog" || pin.type == "input") {
       readPin(pin);
+    }
+    if (pin.type == "output") {
+      digitalWrite(pin.id, pin.value);
     }
   }
 
