@@ -50,7 +50,12 @@ const SelectPin = ({ pins, type }: SelectPinProps) => {
         </SelectTrigger>
         <SelectContent>
           {pins.map(({ id }) => {
-            return <SelectItem value={id.toString()}>{`Pin ${id}`}</SelectItem>;
+            return (
+              <SelectItem
+                value={id.toString()}
+                key={id}
+              >{`Pin ${id}`}</SelectItem>
+            );
           })}
         </SelectContent>
       </Select>
