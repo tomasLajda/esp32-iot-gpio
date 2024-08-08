@@ -37,7 +37,8 @@ export const readPins = (ids: number[], callback: (pins: Pin[]) => void) => {
 
     onValue(reference, (snapshot) => {
       const data = snapshot.val();
-      const pin = { id, ...data };
+      const pin: Pin = { id, ...data };
+
       const index = pins.findIndex((p) => p.id === id);
       if (index !== -1) {
         pins[index] = pin;
